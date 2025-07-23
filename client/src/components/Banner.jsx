@@ -3,7 +3,7 @@ import { assets } from '../assets/assets'
 
 const Banner = () => {
   return (
-  
+  <div className='bg-light'>
     <div className="flex flex-col md:flex-row md:items-start items-center justify-between px-8 md:pl-14 pt-10 bg-primary max-w-6xl mx-3 md:mx-auto rounded-2xl overflow-hidden relative">
   
   {/* Content Section */}
@@ -31,6 +31,7 @@ We streamline the process, ensuring secure communication and a smooth return —
   {/* Optional Background Layer */}
 </div>
 
+</div>
 
   )
 }

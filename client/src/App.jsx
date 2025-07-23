@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar1 from "./components/Navbar1";
 
 import Home from "./pages/Home";
-import LostItems from "./pages/LostItems";
+import LostItem from "./pages/LostItem";
 import FoundItems from "./pages/FoundItems";
 import ItemDetail from "./pages/ItemDetail";
 import Dashboard from "./pages/Dashboard";
@@ -13,7 +13,7 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
-
+import ForgotPassword from "./pages/ForgotPassword";
 const App = () => {
   return (
     <>
@@ -21,7 +21,7 @@ const App = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/lost" element={<LostItems />} />
+        <Route path="/lost" element={<LostItem />} />
         <Route path="/found" element={<FoundItems />} />
         <Route path="/item/:id" element={<ItemDetail />} />
         {/* User-Specific / Protected Routes */}
@@ -33,6 +33,7 @@ const App = () => {
         {/* Authentication Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

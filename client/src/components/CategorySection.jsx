@@ -5,7 +5,7 @@ import Title from "./Title";
 
 const CategorySection = () => {
   return (
-    <div className="flex flex-col mt-1 bg-light items-center py-24 px-6 md:px-16 lg:px-24 xl:px-32">
+    <div className="flex flex-col bg-light items-center py-24 px-6 md:px-16 lg:px-24 xl:px-32">
       <div>
         <Title
           title="Browse by Categories"
