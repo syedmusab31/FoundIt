@@ -25,6 +25,13 @@ export const menuLinks = [
     { name: "Lost Items", path: "/lost" },
     { name: "Found Items", path: "/found" },
 ]
+export const LoggedInMenuLinks = [
+  { name: "Dashboard", path: "/dashboard" },
+  { name: "Lost Items", path: "/lost" },
+  { name: "Found Items", path: "/found" },
+  { name: "List Lost Items", path: "/lost/new" },
+  { name: "List Found Items", path: "/found/new" },
+]
 
 export const categories = [
     {

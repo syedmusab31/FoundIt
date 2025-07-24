@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar1 from "./components/Navbar1";
-
 import Home from "./pages/Home";
 import LostItem from "./pages/LostItem";
 import FoundItems from "./pages/FoundItems";
@@ -14,10 +13,12 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
+import Navbar2 from "./components/Navbar2"; // Updated import for Navbar2
 const App = () => {
   return (
     <>
-      <Navbar1 />
+
+      <Navbar2 />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
