@@ -1,4 +1,16 @@
 import itemModel from "../models/itemModel.js";
+import multer from 'multer';
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  },
+});
+const upload = multer({ storage });
 
 // @desc    Get all lost items
 // @route   GET /api/items/lost
@@ -27,24 +39,25 @@ export const getFoundItems=async(req,res)=>{
 // @route   POST /api/items/lost/new
 // @access  Private
 export const createLostItem = async (req, res) => {
-  const { title, description, image, category, province, phone } = req.body;
-    const userId = req.user.id;
-    const type = 'lost';
+  const { title, description, category, province, phone } = req.body;
+  const userId = req.user.id;
+
   try {
-    const newItem = await itemModel({
+    const newItem = new itemModel({
       title,
       description,
-      image,
+      image: req.file?.path, // Save the file path
       province,
       category,
       type: 'lost',
-      userId: req.user.id,
-      phone
+      userId,
+      phone,
     });
+
     await newItem.save();
     res.json({ success: true, data: newItem });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

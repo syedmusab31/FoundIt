@@ -1,36 +1,28 @@
 import jwt from 'jsonwebtoken';
 
 const userAuth = async (req, res, next) => {
-    try {
-        // Get token from cookies or Authorization header
-        const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
-        
-        if (!token) {
-            return res.status(401).json({ 
-                success: false, 
-                message: "Authorization token required" 
-            });
-        }
+  try {
+    const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
 
-        // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // Attach user to request
-        req.user = { id: decoded.id };
-        next();
-    } catch (error) {
-        console.error("JWT verification failed:", error);
-        
-        let message = "Invalid token";
-        if (error.name === 'TokenExpiredError') {
-            message = "Token expired";
-        }
+    console.log('Token received in middleware:', token);
 
-        return res.status(401).json({ 
-            success: false, 
-            message 
-        });
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authorization token required',
+      });
     }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { id: decoded.id };
+    next();
+  } catch (error) {
+    console.error('JWT verification failed:', error);
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token',
+    });
+  }
 };
 
 export default userAuth;

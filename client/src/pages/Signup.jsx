@@ -47,41 +47,36 @@ const Signup = () => {
       setErrors(validationErrors);
       return;
     }
-  
+
     setIsLoading(true);
-    setErrors({}); // Clear previous errors
-  
+    setErrors({});
+
     try {
       const response = await fetch('http://localhost:5000/api/auth/register', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: form.name,
           email: form.email,
           password: form.password,
-          phone: form.phone
-        })
+          phone: form.phone,
+        }),
       });
-  
-      // Handle non-2xx responses
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Registration failed');
       }
-  
+
       const data = await response.json();
       if (!data.success) {
         throw new Error(data.message || 'Registration failed');
       }
-  
+
       setOtpSent(true);
     } catch (error) {
       console.error('Signup error:', error);
-      setErrors({ 
-        general: error.message || 'Failed to register. Please try again.' 
-      });
+      setErrors({ general: error.message || 'Failed to register. Please try again.' });
     } finally {
       setIsLoading(false);
     }
@@ -101,8 +96,8 @@ const Signup = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: form.email,
-          otp: otp
-        })
+          otp: otp,
+        }),
       });
 
       const data = await response.json();

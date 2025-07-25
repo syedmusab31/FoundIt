@@ -14,19 +14,22 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.success) {
-        login(data.token, data.user);
+        login({ email, password });
       } else {
+        if (data.canResend) {
+          alert(`Email not verified. Please verify your email. Resend OTP to ${data.email}`);
+        }
         setError(data.message || 'Login failed');
       }
     } catch (err) {

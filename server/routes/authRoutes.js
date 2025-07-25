@@ -7,8 +7,10 @@ import {
   logout,
   sendResetOtp,
   resetPassword,
-  verifyResetOtp
+  verifyResetOtp,
+  getUserProfile
 } from "../controllers/authController.js";
+import userAuth from '../middlewares/userAuth.js';
 
 const router = express.Router();
 
@@ -22,8 +24,8 @@ router.post("/send-reset-otp", sendResetOtp);  // Public route
 router.post("/reset-password", resetPassword); // Public route
 router.post("/verify-reset-otp", verifyResetOtp); 
 
-
-// Protected routes would go here
-router.post("/logout", logout);
+// Protected routes 
+router.post('/logout', userAuth, logout);
+router.get('/me', userAuth, getUserProfile); // Protected route to get user profile
 
 export default router;

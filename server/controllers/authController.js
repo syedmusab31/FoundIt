@@ -99,56 +99,33 @@ export const verifyemail = async (req, res) => {
 
 // Login Controller
 export const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    // Find user
+  try {
     const user = await userModel.findOne({ email });
     if (!user) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Check verification status
-    if (!user.isVerified) {
-      // Option to resend OTP
-      return res.status(403).json({ 
-        success: false, 
-        message: "Email not verified",
-        canResend: true,
-        email: user.email 
-      });
-    }
-
-    // Generate JWT token
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    // Set HTTP-only cookie
-    res.cookie("token", token, {
+    // Set the token as a cookie
+    res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    res.json({ 
-      success: true, 
-      message: "Login successful",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email
-      }
-    });
-
+    res.json({ success: true, user: { id: user._id, email: user.email } });
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ success: false, message: "Server error during login" });
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, message: 'Server error during login' });
   }
 };
 
@@ -189,8 +166,12 @@ export const resendOtp = async (req, res) => {
 
 // Logout Controller
 export const logout = (req, res) => {
-  res.clearCookie("token");
-  res.json({ success: true, message: "Logged out successfully" });
+  if (!req.cookies.token) {
+    return res.status(401).json({ success: false, message: 'Not authenticated' });
+  }
+
+  res.clearCookie('token');
+  res.json({ success: true, message: 'Logged out successfully' });
 };
 
 // Send Reset Password OTP
@@ -369,4 +350,18 @@ export const verifyResetOtp = async (req, res) => {
             message: "Failed to verify OTP" 
         });
     }
+};
+
+// Get User Profile Controller
+export const getUserProfile = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.id).select('-password'); // Exclude password
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 };

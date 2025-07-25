@@ -45,37 +45,26 @@ const ListLostItem = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     // Validate all fields
     if (!formData.title || !formData.description || !formData.category || 
         !formData.phone || !formData.province || !formData.image) {
       setError('All fields are required');
       return;
     }
-  
+
     setIsSubmitting(true);
-    
+
     try {
-      // Get JWT token - check both cookies and localStorage
-      let token;
-      
-      // Check cookies
-      if (document.cookie) {
-        const cookieToken = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('token='))
-          ?.split('=')[1];
-        
-        if (cookieToken) token = cookieToken;
-      }
-      
-      // Check localStorage if no cookie token
+      // Get JWT token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
+
+      console.log('Token:', token); // Debugging line
+
       if (!token) {
-        token = localStorage.getItem('token');
-      }
-  
-      if (!token) {
-        // Redirect to login if no token found
         navigate('/login', { 
           state: { 
             from: '/lost/new',
@@ -84,7 +73,7 @@ const ListLostItem = () => {
         });
         return;
       }
-  
+
       // Create FormData for file upload
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
@@ -93,22 +82,25 @@ const ListLostItem = () => {
       formDataToSend.append('phone', formData.phone);
       formDataToSend.append('province', formData.province);
       formDataToSend.append('image', formData.image);
-  
-      const response = await fetch('http://localhost:5000/api/items/lost', {
+
+      console.log('Sending request with token:', token);
+
+      const response = await fetch('http://localhost:5000/api/items/lost/new', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
         },
-        body: formDataToSend
+        body: formDataToSend,
+        credentials: 'include', // Include cookies in the request
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to create item');
       }
-  
+
       const data = await response.json();
-  
+
       // On success
       navigate('/success', { 
         state: { 
@@ -133,13 +125,8 @@ const ListLostItem = () => {
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-            <div className="flex items-center">
-              <svg className="h-5 w-5 text-red-500 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <p className="text-red-700">{error}</p>
-            </div>
+          <div className="error-message">
+            <p>{error}</p>
           </div>
         )}
 
