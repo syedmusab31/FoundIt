@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Plus, Search, Bell, User, TrendingUp, Package, CheckCircle, Clock, Eye } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Plus, Search, Bell,User, TrendingUp, Package, CheckCircle, Clock, Eye } from "lucide-react";
+import Footer from "../components/Footer";
+import { Link, useNavigate } from "react-router-dom";
 
 // Mock data to replace tempItems
 const tempItems = [
@@ -47,15 +49,26 @@ const tempItems = [
 
 // Modern UserItemCard component
 const UserItemCard = ({ item }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const navigate = useNavigate();
+
+  // Close the menu when clicking outside
+  const handleClickOutside = (e) => {
+    if (menuRef.current && !menuRef.current.contains(e.target)) {
+      setMenuOpen(false);
+    }
+  };
+
+  // Add event listener for clicks outside the menu
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div
-      className={`min-w-72 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 mr-4 ${
-        isHovered ? 'shadow-2xl scale-105 border-blue-200' : ''
-      }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="min-w-72 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 mr-4"
     >
       <div className="relative">
         <img
@@ -64,17 +77,62 @@ const UserItemCard = ({ item }) => {
           className="w-full h-40 object-cover"
         />
         <div className="absolute top-3 right-3">
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            item.status === 'active' 
-              ? 'bg-amber-100 text-amber-800' 
-              : 'bg-green-100 text-green-800'
-          }`}>
-            {item.status === 'active' ? 'Lost' : 'Found'}
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium ${
+              item.status === "active"
+                ? "bg-amber-100 text-amber-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            {item.status === "active" ? "Lost" : "Found"}
           </span>
         </div>
-        <div className="absolute bottom-3 left-3 flex items-center space-x-1 bg-black/50 text-white px-2 py-1 rounded-lg backdrop-blur-sm">
-          <Eye size={12} />
-          <span className="text-xs">{item.views}</span>
+        {/* Three-dot menu for updating item status */}
+        <div className="absolute top-3 left-3" ref={menuRef}>
+          <button
+            className="p-1 rounded-full bg-gray-100 hover:bg-gray-200"
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 text-gray-600"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm0 5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" />
+            </svg>
+          </button>
+          {menuOpen && (
+            <div className="absolute left-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => {
+                  navigate(`/items/${item.id}/mark-as-found`);
+                  setMenuOpen(false);
+                }}
+              >
+                Mark as Found
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                onClick={() => {
+                  navigate(`/items/${item.id}/edit`);
+                  setMenuOpen(false);
+                }}
+              >
+                Edit Item
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-100"
+                onClick={() => {
+                  navigate(`/items/${item.id}/delete`);
+                  setMenuOpen(false);
+                }}
+              >
+                Delete Item
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div className="p-4">
@@ -92,24 +150,24 @@ const UserItemCard = ({ item }) => {
 };
 
 // Stats Card component
-const StatsCard = ({ icon: Icon, title, value, change, color }) => (
-  <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-gray-600">{title}</p>
-        <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
-        {change && (
-          <p className={`text-sm mt-1 ${change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
-            {change} from last week
-          </p>
-        )}
-      </div>
-      <div className={`p-3 rounded-xl ${color}`}>
-        <Icon size={24} className="text-white" />
-      </div>
-    </div>
-  </div>
-);
+// const StatsCard = ({ icon: Icon, title, value, change, color }) => (
+//   <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300">
+//     <div className="flex items-center justify-between">
+//       <div>
+//         <p className="text-sm font-medium text-gray-600">{title}</p>
+//         <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+//         {change && (
+//           <p className={`text-sm mt-1 ${change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+//             {change} from last week
+//           </p>
+//         )}
+//       </div>
+//       <div className={`p-3 rounded-xl ${color}`}>
+//         <Icon size={24} className="text-white" />
+//       </div>
+//     </div>
+//   </div>
+// );
 
 // Quick Action Button
 const QuickActionButton = ({ icon: Icon, label, onClick, primary = false }) => (
@@ -154,7 +212,7 @@ const Title = () => {
               Here's what's happening with your items today
             </p>
           </div>
-          <div className="flex items-center space-x-4">
+          {/* <div className="flex items-center space-x-4">
             <div className="relative">
               <Bell className="text-gray-600 hover:text-blue-600 cursor-pointer transition-colors" size={24} />
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
@@ -162,7 +220,7 @@ const Title = () => {
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
               <User className="text-white" size={20} />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
@@ -171,6 +229,7 @@ const Title = () => {
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const activeItems = tempItems.filter((item) => item.status === "active");
   const foundItems = tempItems.filter((item) => item.status === "resolved");
@@ -180,46 +239,15 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto py-8 px-6">
         <Title />
 
-        {/* Stats Section */}
-        <section className="mt-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <StatsCard
-              icon={Package}
-              title="Active Listings"
-              value="12"
-              change="+2"
-              color="bg-gradient-to-r from-blue-500 to-blue-600"
-            />
-            <StatsCard
-              icon={CheckCircle}
-              title="Items Found"
-              value="8"
-              change="+3"
-              color="bg-gradient-to-r from-green-500 to-green-600"
-            />
-            <StatsCard
-              icon={Eye}
-              title="Total Views"
-              value="247"
-              change="+12"
-              color="bg-gradient-to-r from-purple-500 to-purple-600"
-            />
-            <StatsCard
-              icon={Clock}
-              title="Avg. Resolution"
-              value="3.2 days"
-              change="-0.5"
-              color="bg-gradient-to-r from-orange-500 to-orange-600"
-            />
-          </div>
-        </section>
-
         {/* Search and Quick Actions */}
         <section className="mt-12">
           <div className="flex flex-col lg:flex-row gap-6">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Search
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
                 <input
                   type="text"
                   placeholder="Search your items..."
@@ -230,14 +258,18 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
+              {/* Navigate to "Report Lost Item" page */}
               <QuickActionButton
                 icon={Plus}
                 label="Report Lost Item"
+                onClick={() => navigate("/lost/new")} // Navigate to /lost/new
                 primary={true}
               />
+              {/* Navigate to "Report Found Item" page */}
               <QuickActionButton
                 icon={CheckCircle}
                 label="Report Found Item"
+                onClick={() => navigate("/found/new")} // Navigate to /found/new
               />
             </div>
           </div>
@@ -247,15 +279,19 @@ const Dashboard = () => {
         <section className="mt-12">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Your Active Listings</h2>
-              <p className="text-gray-600 mt-1">Items you're currently looking for</p>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Your Active Listings
+              </h2>
+              <p className="text-gray-600 mt-1">
+                Items you're currently looking for
+              </p>
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <TrendingUp size={16} />
               <span>{activeItems.length} active</span>
             </div>
           </div>
-          
+
           {activeItems.length > 0 ? (
             <div className="flex overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               {activeItems.map((item) => (
@@ -265,9 +301,18 @@ const Dashboard = () => {
           ) : (
             <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
               <Package className="mx-auto text-gray-400 mb-4" size={48} />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No active listings</h3>
-              <p className="text-gray-600 mb-6">Start by reporting a lost item</p>
-              <QuickActionButton icon={Plus} label="Report Lost Item" primary={true} />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No active listings
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Start by reporting a lost item
+              </p>
+              <QuickActionButton
+                icon={Plus}
+                label="Report Lost Item"
+                onClick={() => navigate("/lost/new")}
+                primary={true}
+              />
             </div>
           )}
         </section>
@@ -276,8 +321,12 @@ const Dashboard = () => {
         <section className="mt-12 mb-12">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Recently Resolved</h2>
-              <p className="text-gray-600 mt-1">Items that have been successfully reunited</p>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Recently Resolved
+              </h2>
+              <p className="text-gray-600 mt-1">
+                Items that have been successfully reunited
+              </p>
             </div>
             <div className="flex items-center space-x-2 text-sm text-green-600">
               <CheckCircle size={16} />
@@ -294,21 +343,18 @@ const Dashboard = () => {
           ) : (
             <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
               <CheckCircle className="mx-auto text-gray-400 mb-4" size={48} />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No resolved items yet</h3>
-              <p className="text-gray-600">Your successful reunions will appear here</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No resolved items yet
+              </h3>
+              <p className="text-gray-600">
+                Your successful reunions will appear here
+              </p>
             </div>
           )}
         </section>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <div className="text-center text-gray-600">
-            <p>&copy; 2024 Lost & Found. Helping reunite people with their belongings.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

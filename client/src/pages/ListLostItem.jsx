@@ -1,4 +1,4 @@
-import react ,{useState} from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { categories } from '../assets/assets';
 import { provinces } from '../assets/assets';
@@ -8,7 +8,7 @@ const ListLostItem = () => {
     title: '',
     description: '',
     category: '',
-    phoneNumber: '',
+    phone: '',  // Changed from phoneNumber to match backend
     province: '',
     image: null
   });
@@ -48,27 +48,77 @@ const ListLostItem = () => {
     
     // Validate all fields
     if (!formData.title || !formData.description || !formData.category || 
-        !formData.phoneNumber || !formData.province || !formData.image) {
+        !formData.phone || !formData.province || !formData.image) {
       setError('All fields are required');
       return;
     }
-
+  
     setIsSubmitting(true);
     
     try {
-      // In a real app, you would upload to your backend here
-      const formDataToSend = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        formDataToSend.append(key, value);
-      });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Get JWT token - check both cookies and localStorage
+      let token;
       
+      // Check cookies
+      if (document.cookie) {
+        const cookieToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('token='))
+          ?.split('=')[1];
+        
+        if (cookieToken) token = cookieToken;
+      }
+      
+      // Check localStorage if no cookie token
+      if (!token) {
+        token = localStorage.getItem('token');
+      }
+  
+      if (!token) {
+        // Redirect to login if no token found
+        navigate('/login', { 
+          state: { 
+            from: '/lost/new',
+            message: 'Please login to list a lost item' 
+          } 
+        });
+        return;
+      }
+  
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('province', formData.province);
+      formDataToSend.append('image', formData.image);
+  
+      const response = await fetch('http://localhost:5000/api/items/lost', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataToSend
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create item');
+      }
+  
+      const data = await response.json();
+  
       // On success
-      navigate('/success', { state: { message: 'Item listed successfully!' } });
+      navigate('/success', { 
+        state: { 
+          message: 'Lost item listed successfully!',
+          item: data.data 
+        } 
+      });
     } catch (err) {
-      setError('Failed to list item. Please try again.');
+      setError(err.message || 'Failed to list item. Please try again.');
+      console.error('Error creating lost item:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -183,14 +233,14 @@ const ListLostItem = () => {
 
           {/* Phone Number */}
           <div className="mb-6">
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
               Contact Number
             </label>
             <input
               type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
+              id="phone"
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
               className="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               placeholder="e.g. 0712345678"
@@ -213,7 +263,7 @@ const ListLostItem = () => {
             >
               <option value="">Select your province</option>
               {provinces.map((province, index) => (
-                <option key={province.name} value={province.name}>
+                <option key={index} value={province.name}>
                   {province.name}
                 </option>
               ))}

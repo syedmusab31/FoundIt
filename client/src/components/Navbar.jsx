@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, ChevronDown, User, LogOut, Plus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { assets } from '../assets/assets'; // Make sure to import your assets
-
 
 const Navbar = () => {
+  const [open, setOpen] = useState(false);
+  const [listDropdownOpen, setListDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
-  const [open, setOpen] = React.useState(false); // State for mobile menu
-  const [listDropdownOpen, setListDropdownOpen] = React.useState(false); // State for the new 'List' dropdown
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const menuLinks = [
     { name: 'Home', path: '/' },
@@ -18,193 +26,246 @@ const Navbar = () => {
 
   const authenticatedLinks = [
     { name: 'Dashboard', path: '/dashboard' },
-    { name: user?.name || 'Profile', path: '/profile' }
+    // { name: user?.name || 'Profile', path: '/profile' }
   ];
 
-  const listDropdownLinks = [
-    { name: 'List Lost Item', path: '/lost/new' },
-    { name: 'List Found Item', path: '/found/new' },
-  ];
+  // const listDropdownLinks = [
+  //   { name: 'List Lost Item', path: '/lost/new', icon: <Plus className="w-4 h-4" /> },
+  //   { name: 'List Found Item', path: '/found/new', icon: <Plus className="w-4 h-4" /> },
+  // ];
+
+  const handleLogout = () => {
+    logout();
+    setOpen(false);
+    setListDropdownOpen(false);
+    navigate('/');
+  };
 
   return (
-    <div className={`flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 text-gray-600 border-b border-borderColor relative transition-all bg-light`}>
-      <Link to="/" className="text-2xl logo-font text-primary tracking-wide">
-        FoundIt
-      </Link>
+    <>
+      {/* Main Navbar */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? 'bg-white/95 backdrop-blur-md border-b border-gray-200/50 shadow-sm' 
+          : 'bg-white border-b border-gray-100'
+      }`}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Link to="/" className="text-2xl font-semibold text-gray-900 hover:text-blue-600 transition-colors duration-200">
+                FoundIt
+              </Link>
+            </div>
 
-      {/* Desktop Navigation */}
-      <div className="hidden sm:flex items-center gap-8">
-        {menuLinks.map((link, index) => (
-          <Link
-            key={index}
-            to={link.path}
-            className="hover:text-primary transition-colors"
-          >
-            {link.name}
-          </Link>
-        ))}
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              {menuLinks.map((link, index) => (
+                <Link
+                  key={index}
+                  to={link.path}
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 relative group"
+                >
+                  {link.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
+                </Link>
+              ))}
 
-        {isAuthenticated && (
-          <div className="relative">
-            <button
-              onClick={() => setListDropdownOpen(!listDropdownOpen)}
-              className="hover:text-primary transition-colors flex items-center gap-1" // Reduced gap from 2 to 1
-            >
-              <span>List</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                className={`w-5 h-5 transition-transform ${listDropdownOpen ? 'rotate-180' : ''}`}
-                fill="currentColor"
-              >
-                <path d="M12 15.707l-4.293-4.293a1 1 0 011.414-1.414L12 13.88l3.879-3.879a1 1 0 011.414 1.414L12 15.707z" />
-              </svg>
-            </button>
-            {listDropdownOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-transparent border border-borderColor rounded-lg shadow-lg py-2 z-10">
-                {listDropdownLinks.map((link, index) => (
-                  <Link
-                    key={index}
-                    to={link.path}
-                    onClick={() => setListDropdownOpen(false)}
-                    className="block px-4 py-2 text-gray-800"
+              {/* List Dropdown for Authenticated Users
+              {isAuthenticated && (
+                <div className="relative">
+                  <button
+                    onClick={() => setListDropdownOpen(!listDropdownOpen)}
+                    className="flex items-center gap-1 text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 group"
                   >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {isAuthenticated && authenticatedLinks.map((link, index) => (
-          <Link
-            key={index}
-            to={link.path}
-            className="hover:text-primary transition-colors"
-          >
-            {link.name}
-          </Link>
-        ))}
-
-        {isAuthenticated ? (
-          <button
-            onClick={() => {
-              logout();
-              navigate('/');
-            }}
-            className="px-8 py-2 bg-red-500 hover:bg-red-600 transition-all text-white rounded-lg"
-          >
-            Logout
-          </button>
-        ) : (
-          <button
-            onClick={() => navigate('/login')}
-            className="px-8 py-2 bg-primary hover:bg-primary-dull transition-all text-white rounded-lg"
-          >
-            Login
-          </button>
-        )}
-      </div>
-
-      {/* Mobile Navigation */}
-      <div
-        className={`sm:hidden fixed h-screen w-full top-16 left-0 border-t border-borderColor flex flex-col items-start gap-6 p-4 transition-all duration-300 z-50 bg-light ${
-          open ? 'translate-x-0' : 'translate-x-full'
-        }`}
-      >
-        {menuLinks.map((link, index) => (
-          <Link
-            key={index}
-            to={link.path}
-            onClick={() => setOpen(false)}
-            className="w-full py-2 hover:text-primary transition-colors"
-          >
-            {link.name}
-          </Link>
-        ))}
-
-        {isAuthenticated && (
-          <>
-            <div className="w-full">
-              <button
-                onClick={() => setListDropdownOpen(!listDropdownOpen)}
-                className="w-full text-left py-2 hover:text-primary transition-colors flex items-center gap-1"
-              >
-                List
-                <img src={assets.drop_icon} alt="dropdown" className={`w-4 h-4 transition-transform ${listDropdownOpen ? 'rotate-180' : ''}`} />    
-              </button>
-              {listDropdownOpen && (
-                <div className="pl-4 border-l border-borderColor mt-2">
-                  {listDropdownLinks.map((link, index) => (
-                    <Link
-                      key={index}
-                      to={link.path}
-                      onClick={() => {
-                        setOpen(false);
-                        setListDropdownOpen(false);
-                      }}
-                      className="block py-2 text-gray-800 hover:text-primary"
-                    >
-                      {link.name}
-                    </Link>
-                  ))}
+                    <Plus className="w-4 h-4" />
+                    List Item
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${listDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {listDropdownOpen && (
+                    <>
+                      {/* Backdrop 
+                      <div 
+                        className="fixed inset-0 z-10" 
+                        onClick={() => setListDropdownOpen(false)}
+                      ></div>
+                      
+                      {/* Dropdown 
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg py-2 z-20">
+                        {listDropdownLinks.map((link, index) => (
+                          <Link
+                            key={index}
+                            to={link.path}
+                            onClick={() => setListDropdownOpen(false)}
+                            className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200"
+                          >
+                            {link.icon}
+                            {link.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
+              )} */}
+
+              {/* Authenticated Links */}
+              {isAuthenticated && authenticatedLinks.map((link, index) => (
+                <Link
+                  key={index}
+                  to={link.path}
+                  className="text-gray-600 hover:text-gray-900 font-medium transition-colors duration-200 relative group"
+                >
+                  {link.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-200 group-hover:w-full"></span>
+                </Link>
+              ))}
+            </div>
+
+            {/* Desktop Auth Buttons */}
+            <div className="hidden md:flex items-center space-x-4">
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">{user?.name}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium transition-colors duration-200"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                >
+                  Login
+                </button>
               )}
             </div>
-            {authenticatedLinks.map((link, index) => (
-              <Link
-                key={index}
-                to={link.path}
-                onClick={() => setOpen(false)}
-                className="w-full py-2 hover:text-primary transition-colors"
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setOpen(!open)}
+                className="p-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                aria-label="Toggle menu"
               >
-                {link.name}
-              </Link>
-            ))}
-          </>
-        )}
+                {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
 
-        {isAuthenticated ? (
-          <button
-            onClick={() => {
-              logout();
-              setOpen(false);
-              navigate('/');
-            }}
-            className="w-full text-left py-2 px-8 bg-red-500 hover:bg-red-600 transition-all text-white rounded-lg"
-          >
-            Logout
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              setOpen(false);
-              navigate('/login');
-            }}
-            className="w-full text-left py-2 px-8 bg-primary hover:bg-primary-dull transition-all text-white rounded-lg"
-          >
-            Login
-          </button>
-        )}
-      </div>
+      {/* Mobile Menu Overlay */}
+      {open && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm" onClick={() => setOpen(false)}></div>
+          
+          {/* Mobile Menu */}
+          <div className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg">
+            <div className="px-6 py-4 space-y-4">
+              {/* Navigation Links */}
+              {menuLinks.map((link, index) => (
+                <Link
+                  key={index}
+                  to={link.path}
+                  onClick={() => setOpen(false)}
+                  className="block py-3 text-gray-700 hover:text-gray-900 font-medium transition-colors duration-200"
+                >
+                  {link.name}
+                </Link>
+              ))}
 
-      {/* Mobile Menu Button */}
-      <button
-        className="sm:hidden cursor-pointer"
-        aria-label="Menu"
-        onClick={() => {
-          setOpen(!open);
-          setListDropdownOpen(false); // Close dropdown when opening/closing mobile menu
-        }}
-      >
-        <img
-          src={open ? assets.close_icon : assets.menu_icon}
-          alt="menu"
-          className="w-6 h-6"
-        />
-      </button>
-    </div>
+              {/* List Dropdown for Mobile */}
+              {isAuthenticated && (
+                <div className="space-y-2">
+                  <button
+                    onClick={() => setListDropdownOpen(!listDropdownOpen)}
+                    className="flex items-center justify-between w-full py-3 text-gray-700 hover:text-gray-900 font-medium transition-colors duration-200"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      List Item
+                    </div>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${listDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {listDropdownOpen && (
+                    <div className="pl-6 space-y-2 border-l-2 border-gray-100">
+                      {listDropdownLinks.map((link, index) => (
+                        <Link
+                          key={index}
+                          to={link.path}
+                          onClick={() => {
+                            setOpen(false);
+                            setListDropdownOpen(false);
+                          }}
+                          className="flex items-center gap-3 py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
+                        >
+                          {link.icon}
+                          {link.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Authenticated Links for Mobile */}
+              {isAuthenticated && authenticatedLinks.map((link, index) => (
+                <Link
+                  key={index}
+                  to={link.path}
+                  onClick={() => setOpen(false)}
+                  className="block py-3 text-gray-700 hover:text-gray-900 font-medium transition-colors duration-200"
+                >
+                  {link.name}
+                </Link>
+              ))}
+
+              {/* Mobile Auth Section */}
+              <div className="pt-4 border-t border-gray-200">
+                {isAuthenticated ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+                      <User className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-700">{user?.name}</span>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 w-full px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium transition-colors duration-200"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      navigate('/login');
+                    }}
+                    className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200"
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Spacer to prevent content from hiding behind fixed navbar */}
+      <div className="h-16"></div>
+    </>
   );
 };
 

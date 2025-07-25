@@ -95,6 +95,7 @@ const Login = () => {
               <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
                 Forgot your password?
               </a>
+            
             </div>
           </div>
 
@@ -108,6 +109,11 @@ const Login = () => {
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
+            <div className='text-sm mt-3 flex items-center justify-center'>
+            <a href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
+                Don't have an account? Sign up
+              </a>
+            </div>
           </div>
         </form>
       </div>

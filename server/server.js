@@ -4,6 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/mongodb.js';
 import authRouter from './routes/authRoutes.js';
+import itemRoutes from './routes/itemRoutes.js';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -22,6 +23,8 @@ app.use(cors({
 // API endpoints
 app.use('/api/auth', authRouter);
 
+// Item API endpoints
+app.use('/api/items', itemRoutes);
 // Health check
 app.get('/', (req, res) => {
   res.send('Server is running');
