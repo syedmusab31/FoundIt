@@ -6,7 +6,7 @@ import hero_image1 from "../assets/hero_image1.jpg";
 import hero_image2 from "../assets/hero_image2.jpg";
 import hero_image3 from "../assets/hero_image3.jpg";
 import banner_image from "../assets/banner_image.png";
-
+import drop_icon from "../assets/drop_icon.svg";
 
 export  const assets={
     close_icon,
@@ -16,9 +16,16 @@ export  const assets={
     hero_image1,
     hero_image2,
     hero_image3,
-    banner_image
+    banner_image,
+    drop_icon
 }
 
+export const tempItems = [
+  { id: 1, name: "Black Wallet", image: assets.hero_image1, date: "2025-07-20", status: "active", location: "Main Gate" },
+  { id: 2, name: "Blue Umbrella", image: assets.hero_image2, date: "2025-07-15", status: "resolved", location: "Library" },
+  { id: 3, name: "Silver Keychain", image: assets.hero_image3, date: "2025-07-10", status: "active", location: "Hostel Block" },
+  { id: 4, name: "Red Bag", image: assets.hero_image1, date: "2025-07-05", status: "active", location: "Cafeteria" },
+];
 
 export const menuLinks = [
     { name: "Home", path: "/" },
@@ -68,6 +75,26 @@ export const categories = [
         name: "Other"
     }
 ];
+export const provinces =[
+  {
+    name: "Punjab"
+  },
+  {
+    name: "Sindh"
+  },
+  {
+    name: "Khyber Pakhtunkhwa"
+  },
+  {
+    name: "Balochistan"
+  },
+  {
+    name:"Islamabad"
+  }
+  ,{
+    name:"Kashmir"
+  }
+]
 
 export const LostItems = [
   {

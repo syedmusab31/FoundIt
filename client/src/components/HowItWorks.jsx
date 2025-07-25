@@ -1,59 +1,73 @@
 import React from "react";
 import { FaSearch, FaCamera, FaUserCircle, FaEdit, FaCheckCircle } from "react-icons/fa";
 
-const checkpointsLost = [
-  { icon: <FaSearch />, text: "Browse found items" },
-  { icon: <FaUserCircle />, text: "Create an account or login" },
-  { icon: <FaCamera />, text: "List lost item with picture and details" },
-  { icon: <FaEdit />, text: "Track from dashboard" },
-  { icon: <FaCheckCircle />, text: "Mark as found once recovered" },
-];
-
-const checkpointsFound = [
-  { icon: <FaSearch />, text: "Browse lost items" },
-  { icon: <FaUserCircle />, text: "Create an account or login" },
-  { icon: <FaCamera />, text: "List found item with picture and details" },
-  { icon: <FaEdit />, text: "Track from dashboard" },
-  { icon: <FaCheckCircle />, text: "Mark as returned once claimed" },
-];
-
 const HowItWorks = () => {
+  const workflows = [
+    {
+      title: "Lost an Item?",
+      steps: [
+        { icon: <FaSearch className="text-indigo-500" />, text: "Browse found items" },
+        { icon: <FaUserCircle className="text-indigo-500" />, text: "Create an account or login" },
+        { icon: <FaCamera className="text-indigo-500" />, text: "List lost item with details" },
+        { icon: <FaEdit className="text-indigo-500" />, text: "Track from dashboard" },
+        { icon: <FaCheckCircle className="text-indigo-500" />, text: "Mark as found once recovered" }
+      ],
+      color: "indigo"
+    },
+    {
+      title: "Found an Item?",
+      steps: [
+        { icon: <FaSearch className="text-green-500" />, text: "Browse lost items" },
+        { icon: <FaUserCircle className="text-green-500" />, text: "Create an account or login" },
+        { icon: <FaCamera className="text-green-500" />, text: "List found item with details" },
+        { icon: <FaEdit className="text-green-500" />, text: "Track from dashboard" },
+        { icon: <FaCheckCircle className="text-green-500" />, text: "Mark as returned once claimed" }
+      ],
+      color: "green"
+    }
+  ];
+
   return (
-    <div className="bg-light py-20 px-6 md:px-16 lg:px-24 xl:px-32">
-      <h2 className="text-3xl font-semibold text-center text-gray-800 mb-12">How It Works</h2>
-      <div className="flex flex-col md:flex-row justify-between items-center gap-16">
-        
-        {/* Left Section - Lost an Item */}
-        <div className="w-full md:w-1/2 space-y-6">
-          <h3 className="text-xl font-medium text-gray-700">If you lost something</h3>
-          <ul className="space-y-4">
-            {checkpointsLost.map((item, index) => (
-              <li key={index} className="flex items-center gap-3 text-gray-600 text-base">
-                <span className="text-indigo-600 text-lg">{item.icon}</span>
-                <span>{item.text}</span>
-              </li>
-            ))}
-          </ul>
+    <section className="bg-light py-20 px-6 md:px-16 lg:px-24 xl:px-32">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-16">
+          How FoundIt Works
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+          {workflows.map((workflow, index) => (
+            <div
+              key={index}
+              className={`p-8 rounded-2xl bg-gradient-to-br from-${workflow.color}-50 to-white border border-${workflow.color}-100`}
+            >
+              <h3 className="text-xl font-semibold text-gray-800 mb-6">
+                {workflow.title}
+              </h3>
+
+              <ul className="space-y-5">
+                {workflow.steps.map((step, i) => (
+                  <li key={i} className="flex items-center gap-4"> {/* Aligned vertically */}
+                    <div
+                      className={`flex items-center justify-center w-10 h-10 rounded-full bg-${workflow.color}-100`}
+                    >
+                      {step.icon}
+                    </div>
+                    <div>
+                      <p className="text-gray-700 font-medium">{step.text}</p>
+                      {i < workflow.steps.length - 1 && (
+                        <div
+                          className={`h-6 w-px ml-5 my-1 bg-${workflow.color}-200`}
+                        ></div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-
-        {/* Divider */}
-        <div className="hidden md:block h-64 w-[2px] rounded-full bg-gray-300"></div>
-
-        {/* Right Section - Found an Item */}
-        <div className="w-full md:w-1/2 space-y-6">
-          <h3 className="text-xl font-medium text-gray-700">If you found something</h3>
-          <ul className="space-y-4">
-            {checkpointsFound.map((item, index) => (
-              <li key={index} className="flex items-center gap-3 text-gray-600 text-base">
-                <span className="text-green-600 text-lg">{item.icon}</span>
-                <span>{item.text}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
       </div>
-    </div>
+    </section>
   );
 };
 
