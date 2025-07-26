@@ -24,22 +24,37 @@ const FoundItems = () => {
     date: "",
   });
 
+  const [allItems, setAllItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 6;
 
   useEffect(() => {
-    const filtered = FoundItem.filter(item => {
+    // Fetch found items from backend
+    fetch('http://localhost:5000/api/items/found')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setAllItems(data.data || []);
+        } else {
+          setAllItems([]);
+        }
+      })
+      .catch(() => setAllItems([]));
+  }, []);
+
+  useEffect(() => {
+    const filtered = allItems.filter(item => {
       const matchesQuery = item.title.toLowerCase().includes(search.query.toLowerCase()) ||
         item.description.toLowerCase().includes(search.query.toLowerCase());
-      const matchesProvince = !search.province || item.location?.province === search.province;
+      const matchesProvince = !search.province || item.province === search.province;
       const matchesCategory = !search.category || item.category === search.category;
       const matchesDate = !search.date || new Date(item.createdAt).toISOString().split('T')[0] === search.date;
       return matchesQuery && matchesProvince && matchesCategory && matchesDate;
     });
     setFilteredItems(filtered);
     setCurrentPage(0);
-  }, [search]);
+  }, [search, allItems]);
 
   const handleClearFilters = () => {
     setSearch({

@@ -229,10 +229,48 @@ const Title = () => {
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const navigate = useNavigate(); // Initialize useNavigate
+  const [activeItems, setActiveItems] = useState([]);
+  const [foundItems, setFoundItems] = useState([]);
+  const navigate = useNavigate();
 
-  const activeItems = tempItems.filter((item) => item.status === "active");
-  const foundItems = tempItems.filter((item) => item.status === "resolved");
+  useEffect(() => {
+    // Get JWT token from cookies
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1];
+    // Log the token for debugging
+    // This is just for debugging purposes, remove in production
+      console.log('Token in dashboard:', token);
+    // Fetch active items
+    fetch('http://localhost:5000/api/items/my/active', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      credentials: 'include',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setActiveItems(data.data || []);
+        } else {
+          setActiveItems([]);
+        }
+      })
+      .catch(() => setActiveItems([]));
+    // Fetch resolved items
+    fetch('http://localhost:5000/api/items/my/resolved', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      credentials: 'include',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setFoundItems(data.data || []);
+        } else {
+          setFoundItems([]);
+        }
+      })
+      .catch(() => setFoundItems([]));
+  }, []);
 
   return (
     <div className="bg-gray-50 min-h-screen">

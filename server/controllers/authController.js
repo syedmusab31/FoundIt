@@ -13,7 +13,16 @@ export const register = async (req, res) => {
 
     // Validation
     if (!name || !email || !password || !phone) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, message: 'Invalid email format' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+    if (!/^\d{10,15}$/.test(phone)) {
+      return res.status(400).json({ success: false, message: 'Invalid phone number format' });
     }
 
     // Check existing user
@@ -100,26 +109,29 @@ export const verifyemail = async (req, res) => {
 // Login Controller
 export const login = async (req, res) => {
   const { email, password } = req.body;
-
+  
   try {
     const user = await userModel.findOne({ email });
     if (!user) {
+      console.log('User not found');
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
-
+    
+    console.log('Login attempt:', email);
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log('Password does not match');
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    console.log('Generated JWT token:', token);
 
-    // Set the token as a cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: false, // for local dev
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     res.json({ success: true, user: { id: user._id, email: user.email } });

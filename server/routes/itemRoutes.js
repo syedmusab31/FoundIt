@@ -22,7 +22,7 @@ router.get('/found', getFoundItems);
 
 // Private Routes (Protected)
 router.post('/lost/new', userAuth, upload.single('image'), createLostItem); // Create a new lost item
-router.post('/found/new', userAuth, createFoundItem); // Create a new found item
+router.post('/found/new', userAuth, upload.single('image'), createFoundItem); // Create a new found item
 router.patch('/:id/status', userAuth, updateItemStatus); // Update item status
 router.delete('/:id', userAuth, deleteItem); // Delete an item
 router.get('/my/active', userAuth, getMyActiveItems); // Get active items listed by logged-in user

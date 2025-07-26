@@ -1,4 +1,4 @@
-import react ,{useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { categories } from '../assets/assets';
 import { provinces } from '../assets/assets';
@@ -8,7 +8,7 @@ const ListFoundItem = () => {
     title: '',
     description: '',
     category: '',
-    phoneNumber: '',
+    phone: '',
     province: '',
     image: null
   });
@@ -16,6 +16,28 @@ const ListFoundItem = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preview, setPreview] = useState('');
   const navigate = useNavigate();
+  const [myFoundItems, setMyFoundItems] = useState([]);
+
+  useEffect(() => {
+    // Get JWT token from cookies
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1];
+    fetch('http://localhost:5000/api/items/my/active', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      credentials: 'include',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setMyFoundItems((data.data || []).filter(item => item.type === 'found'));
+        } else {
+          setMyFoundItems([]);
+        }
+      })
+      .catch(() => setMyFoundItems([]));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,7 +70,7 @@ const ListFoundItem = () => {
     
     // Validate all fields
     if (!formData.title || !formData.description || !formData.category || 
-        !formData.phoneNumber || !formData.province || !formData.image) {
+        !formData.phone || !formData.province || !formData.image) {
       setError('All fields are required');
       return;
     }
@@ -56,22 +78,70 @@ const ListFoundItem = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, you would upload to your backend here
+      // Get JWT token from cookies
+      const token = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('token='))
+        ?.split('=')[1];
+      if (!token) {
+        navigate('/login', { 
+          state: { 
+            from: '/found/new',
+            message: 'Please login to list a found item' 
+          } 
+        });
+        return;
+      }
+      // Create FormData for file upload
       const formDataToSend = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        formDataToSend.append(key, value);
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('category', formData.category);
+      formDataToSend.append('phone', formData.phone);
+      formDataToSend.append('province', formData.province);
+      formDataToSend.append('image', formData.image);
+      const response = await fetch('http://localhost:5000/api/items/found/new', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formDataToSend,
+        credentials: 'include',
       });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // On success
-      navigate('/success', { state: { message: 'Item listed successfully!' } });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create item');
+      }
+      const data = await response.json();
+      // On success, refresh user's found items
+      fetchMyFoundItems();
+      navigate('/success', { state: { message: 'Item listed successfully!', item: data.data } });
     } catch (err) {
-      setError('Failed to list item. Please try again.');
+      setError(err.message || 'Failed to list item. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Add fetchMyFoundItems function to refresh user's found items
+  const fetchMyFoundItems = () => {
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1];
+    fetch('http://localhost:5000/api/items/my/active', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      credentials: 'include',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setMyFoundItems((data.data || []).filter(item => item.type === 'found'));
+        } else {
+          setMyFoundItems([]);
+        }
+      })
+      .catch(() => setMyFoundItems([]));
   };
 
   return (
@@ -81,6 +151,23 @@ const ListFoundItem = () => {
           <h1 className="text-3xl font-bold text-gray-900">List a Found Item</h1>
           <p className="mt-2 text-gray-600">Help us reunite found items with their owners</p>
         </div>
+        {/* My Listed Found Items */}
+        {myFoundItems.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">My Listed Found Items</h2>
+            <ul className="space-y-4">
+              {myFoundItems.map(item => (
+                <li key={item._id} className="p-4 bg-white rounded shadow flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="font-bold">{item.title}</div>
+                    <div className="text-gray-600 text-sm">{item.description}</div>
+                  </div>
+                  <div className="text-gray-500 text-xs mt-2 md:mt-0">{item.status}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
@@ -183,14 +270,14 @@ const ListFoundItem = () => {
 
           {/* Phone Number */}
           <div className="mb-6">
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
               Contact Number
             </label>
             <input
               type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
+              id="phone"
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
               className="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               placeholder="e.g. 0712345678"

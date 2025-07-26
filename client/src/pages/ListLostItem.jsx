@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { categories } from '../assets/assets';
 import { provinces } from '../assets/assets';
@@ -16,6 +16,28 @@ const ListLostItem = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [preview, setPreview] = useState('');
   const navigate = useNavigate();
+  const [myLostItems, setMyLostItems] = useState([]);
+
+  useEffect(() => {
+    // Get JWT token from cookies
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1];
+    fetch('http://localhost:5000/api/items/my/active', {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      credentials: 'include',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setMyLostItems((data.data || []).filter(item => item.type === 'lost'));
+        } else {
+          setMyLostItems([]);
+        }
+      })
+      .catch(() => setMyLostItems([]));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -87,11 +109,8 @@ const ListLostItem = () => {
 
       const response = await fetch('http://localhost:5000/api/items/lost/new', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formDataToSend,
         credentials: 'include', // Include cookies in the request
+        body: formDataToSend,
       });
 
       if (!response.ok) {
@@ -101,9 +120,10 @@ const ListLostItem = () => {
 
       const data = await response.json();
 
-      // On success
-      navigate('/success', { 
-        state: { 
+      // On success, refresh user's lost items
+      fetchMyLostItems();
+      navigate('/dashboard', {
+        state: {
           message: 'Lost item listed successfully!',
           item: data.data 
         } 
@@ -116,6 +136,26 @@ const ListLostItem = () => {
     }
   };
 
+  // Add fetchMyLostItems function to refresh user's lost items
+  const fetchMyLostItems = () => {
+    const token = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('token='))
+      ?.split('=')[1];
+    fetch('http://localhost:5000/api/items/my/active', {
+      credentials: 'include',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setMyLostItems((data.data || []).filter(item => item.type === 'lost'));
+        } else {
+          setMyLostItems([]);
+        }
+      })
+      .catch(() => setMyLostItems([]));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
@@ -123,6 +163,23 @@ const ListLostItem = () => {
           <h1 className="text-3xl font-bold text-gray-900">List a Lost Item</h1>
           <p className="mt-2 text-gray-600">Help us reunite lost items with their owners</p>
         </div>
+        {/* My Listed Lost Items */}
+        {myLostItems.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">My Listed Lost Items</h2>
+            <ul className="space-y-4">
+              {myLostItems.map(item => (
+                <li key={item._id} className="p-4 bg-white rounded shadow flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <div className="font-bold">{item.title}</div>
+                    <div className="text-gray-600 text-sm">{item.description}</div>
+                  </div>
+                  <div className="text-gray-500 text-xs mt-2 md:mt-0">{item.status}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {error && (
           <div className="error-message">
