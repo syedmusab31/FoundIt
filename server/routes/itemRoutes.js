@@ -12,9 +12,9 @@ import {
   } from '../controllers/itemController.js';
 
   import userAuth from '../middlewares/userAuth.js';
+import upload from '../middlewares/multerConfig.js';
 
   const router = express.Router();
-  const upload = multer({ dest: 'uploads/' }); // Configure multer for file uploads
 
   // Public routes
 router.get('/lost', getLostItems);

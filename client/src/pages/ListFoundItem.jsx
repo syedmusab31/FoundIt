@@ -19,24 +19,7 @@ const ListFoundItem = () => {
   const [myFoundItems, setMyFoundItems] = useState([]);
 
   useEffect(() => {
-    // Get JWT token from cookies
-    const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('token='))
-      ?.split('=')[1];
-    fetch('http://localhost:5000/api/items/my/active', {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-      credentials: 'include',
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setMyFoundItems((data.data || []).filter(item => item.type === 'found'));
-        } else {
-          setMyFoundItems([]);
-        }
-      })
-      .catch(() => setMyFoundItems([]));
+    fetchMyFoundItems();
   }, []);
 
   const handleChange = (e) => {
@@ -78,20 +61,6 @@ const ListFoundItem = () => {
     setIsSubmitting(true);
     
     try {
-      // Get JWT token from cookies
-      const token = document.cookie
-        .split('; ')
-        .find(row => row.startsWith('token='))
-        ?.split('=')[1];
-      if (!token) {
-        navigate('/login', { 
-          state: { 
-            from: '/found/new',
-            message: 'Please login to list a found item' 
-          } 
-        });
-        return;
-      }
       // Create FormData for file upload
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
@@ -100,14 +69,23 @@ const ListFoundItem = () => {
       formDataToSend.append('phone', formData.phone);
       formDataToSend.append('province', formData.province);
       formDataToSend.append('image', formData.image);
+
       const response = await fetch('http://localhost:5000/api/items/found/new', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
         body: formDataToSend,
         credentials: 'include',
       });
+
+      if (response.status === 401) {
+        navigate('/login', {
+          state: {
+            from: '/found/new',
+            message: 'Please login to list a found item'
+          }
+        });
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to create item');
@@ -125,15 +103,17 @@ const ListFoundItem = () => {
 
   // Add fetchMyFoundItems function to refresh user's found items
   const fetchMyFoundItems = () => {
-    const token = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('token='))
-      ?.split('=')[1];
     fetch('http://localhost:5000/api/items/my/active', {
-      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       credentials: 'include',
     })
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 401) {
+          // Don't navigate, just clear items.
+          // The user might not be logged in, which is fine for this view.
+          return { success: false };
+        }
+        return res.json();
+      })
       .then(data => {
         if (data.success) {
           setMyFoundItems((data.data || []).filter(item => item.type === 'found'));

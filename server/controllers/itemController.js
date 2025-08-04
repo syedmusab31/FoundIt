@@ -1,5 +1,7 @@
 import itemModel from "../models/itemModel.js";
+import fs from "fs";
 import multer from "multer";
+import { body, validationResult } from 'express-validator';
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -39,64 +41,92 @@ export const getFoundItems = async (req, res) => {
 // @desc    Create a new lost item
 // @route   POST /api/items/lost/new
 // @access  Private
-export const createLostItem = async (req, res) => {
-  const { title, description, category, province, phone } = req.body;
-  const userId = req.user.id;
+export const createLostItem = [
+  // Validation middleware
+  body('title').notEmpty().trim().escape(),
+  body('description').notEmpty().trim().escape(),
+  body('category').notEmpty().trim().escape(),
+  body('province').notEmpty().trim().escape(),
+  body('phone').notEmpty().trim().escape(),
 
-  // Validate request data
-  if (!title || !description || !category || !province || !phone) {
-    return res.status(400).json({ success: false, message: "All fields are required" });
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { title, description, category, province, phone } = req.body;
+    const userId = req.user.id;
+
+    // Validate request data
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    try {
+      const newItem = new itemModel({
+        title,
+        description,
+        image: req.file.path, // Save the file path
+        province,
+        category,
+        type: "lost",
+        userId,
+        phone,
+      });
+
+      await newItem.save();
+      res.status(201).json({ success: true, data: newItem });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
-
-  try {
-    const newItem = new itemModel({
-      title,
-      description,
-      image: req.file?.path, // Save the file path
-      province,
-      category,
-      type: "lost",
-      userId,
-      phone,
-    });
-
-    await newItem.save();
-    res.status(201).json({ success: true, data: newItem });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+];
 
 // @desc    Create a new found item
 // @route   POST /api/items/found/new
 // @access  Private
-export const createFoundItem = async (req, res) => {
-  const { title, description, category, province, phone } = req.body;
-  const userId = req.user.id;
+export const createFoundItem = [
+  // Validation middleware
+  body('title').notEmpty().trim().escape(),
+  body('description').notEmpty().trim().escape(),
+  body('category').notEmpty().trim().escape(),
+  body('province').notEmpty().trim().escape(),
+  body('phone').notEmpty().trim().escape(),
 
-  // Validate request data
-  if (!title || !description || !category || !province || !phone) {
-    return res.status(400).json({ success: false, message: "All fields are required" });
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { title, description, category, province, phone } = req.body;
+    const userId = req.user.id;
+
+    // Validate request data
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    try {
+      const newItem = new itemModel({
+        title,
+        description,
+        image: req.file.path, // Save the file path
+        province,
+        category,
+        type: "found",
+        userId,
+        phone,
+      });
+
+      await newItem.save();
+      res.status(201).json({ success: true, data: newItem });
+    } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+    }
   }
-
-  try {
-    const newItem = new itemModel({
-      title,
-      description,
-      image: req.file?.path, // Save the file path
-      province,
-      category,
-      type: "found",
-      userId,
-      phone,
-    });
-
-    await newItem.save();
-    res.status(201).json({ success: true, data: newItem });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+];
 
 // @desc    Update item status (e.g., mark as found)
 // @route   PATCH /api/items/:id/status
@@ -139,7 +169,18 @@ export const deleteItem = async (req, res) => {
       return res.status(403).json({ success: false, message: "Not authorized" });
     }
 
-    await item.remove();
+    // Delete the image file associated with the item
+    if (item.image) {
+      try {
+        fs.unlinkSync(item.image);
+      } catch (fsError) {
+        console.error("Failed to delete file:", fsError);
+        // Decide if you want to proceed or return an error.
+        // For now, we'll log the error and proceed with DB deletion.
+      }
+    }
+
+    await itemModel.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: "Item removed" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

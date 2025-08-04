@@ -26,9 +26,14 @@ export const register = async (req, res) => {
     }
 
     // Check existing user
-    const existingUser = await userModel.findOne({ email });
+    const existingUser = await userModel.findOne({ $or: [{ email }, { phone }] });
     if (existingUser) {
-      return res.status(409).json({ success: false, message: "Email already registered" });
+        if (existingUser.email === email) {
+            return res.status(409).json({ success: false, message: "Email already registered" });
+        }
+        if (existingUser.phone === phone) {
+            return res.status(409).json({ success: false, message: "Phone number already registered" });
+        }
     }
 
     // Hash password
@@ -129,7 +134,7 @@ export const login = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false, // for local dev
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
